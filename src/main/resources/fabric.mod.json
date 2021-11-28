@@ -3,14 +3,15 @@
   "id": "wurst",
   "version": "${version}",
 
-  "name": "Wurst Client",
-  "description": "Wurst Wurst Wurst!",
+  "name": "NeoK Wurst",
+  "description": "Sausages with extra Potassium!",
   "authors": [
-    "Alexander01998"
+    "Alexander01998",
+	"DexieTheSheep"
   ],
   "contact": {
-    "homepage": "https://www.wurstclient.net/",
-    "sources": "https://www.wurstclient.net/github/"
+    "homepage": "https://github.com/Lamby777/NeoK",
+    "sources": "https://github.com/Lamby777/NeoK"
   },
 
   "license": "GPL-3.0-or-later",
