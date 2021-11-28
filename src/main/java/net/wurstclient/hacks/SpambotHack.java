@@ -14,6 +14,8 @@ import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
+import net.wurstclient.util.ChatUtils;
+
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.time.LocalDateTime;
@@ -24,8 +26,7 @@ import net.minecraft.client.network.PlayerListEntry;
 public final class SpambotHack extends Hack implements UpdateListener {
 	private Random rand = new Random();
 	private int timer;
-	public static String message = "If you see this, then the K-Client Spambot is working! "
-			+ "Make sure you check out the command help for .spam to customize the message.";
+	public static String message = "";
 
 	private final SliderSetting spamDelay = new SliderSetting("Speed",
 			"The message send rate of the spambot.\n" + "Lower = faster.", 6, 0, 60, 0.5, ValueDisplay.DECIMAL);
@@ -60,8 +61,17 @@ public final class SpambotHack extends Hack implements UpdateListener {
 	}
 
 	public void sendMessage(String message) {
-		ChatMessageC2SPacket packet = new ChatMessageC2SPacket(message);
-		MC.getNetworkHandler().sendPacket(packet);
+		if (message.equals("")) {
+			ChatUtils.error("You don't have a spam message set!" +
+							"Use .spam <message> to set one, then re-enable the hack.");
+		} else if (message.startsWith(".")) {
+			// Message is Wurst command
+			WURST.getCmdProcessor().process(message.substring(1));
+		} else {
+			// Otherwise, send to chat
+			ChatMessageC2SPacket packet = new ChatMessageC2SPacket(message);
+			MC.getNetworkHandler().sendPacket(packet);
+		}
 	}
 
 	public String evaluateMessage(String message) {

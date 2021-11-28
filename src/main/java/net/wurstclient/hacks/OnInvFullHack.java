@@ -7,26 +7,12 @@
  */
 package net.wurstclient.hacks;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.MiningToolItem;
-import net.minecraft.item.SwordItem;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
-import net.wurstclient.WurstClient;
-import net.wurstclient.command.CmdProcessor;
-import net.wurstclient.command.Command;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
-import net.wurstclient.mixinterface.IMiningToolItem;
-import net.wurstclient.mixinterface.ISwordItem;
 import net.wurstclient.settings.CheckboxSetting;
-import net.wurstclient.settings.EnumSetting;
-import net.wurstclient.settings.SliderSetting;
 
 @SearchTags({"oninvfull", "inventory", "full", "automatic"})
 public final class OnInvFullHack extends Hack implements UpdateListener {
