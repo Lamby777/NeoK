@@ -19,12 +19,17 @@ import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.BlockUtils;
 
-public final class GlideHack extends Hack implements UpdateListener
-{
+public final class GlideHack extends Hack implements UpdateListener {
+	private final CheckboxSetting doSneakFall = new CheckboxSetting("Temporary Disable",
+			"Temporarily disable this hack using your crouch button.\n"
+			+ "Turn off if you want to glide while crouching.",
+			true);
+	
 	private final SliderSetting fallSpeed = new SliderSetting("Fall speed",
 		0.125, 0.005, 0.25, 0.005, ValueDisplay.DECIMAL);
 	
@@ -37,8 +42,7 @@ public final class GlideHack extends Hack implements UpdateListener
 		0.01,
 		v -> v == 0 ? "disabled" : ValueDisplay.DECIMAL.getValueString(v));
 	
-	public GlideHack()
-	{
+	public GlideHack() {
 		super("Glide");
 		
 		setCategory(Category.MOVEMENT);
@@ -48,20 +52,20 @@ public final class GlideHack extends Hack implements UpdateListener
 	}
 	
 	@Override
-	public void onEnable()
-	{
+	public void onEnable() {
 		EVENTS.add(UpdateListener.class, this);
 	}
 	
 	@Override
-	public void onDisable()
-	{
+	public void onDisable() {
 		EVENTS.remove(UpdateListener.class, this);
 	}
 	
 	@Override
-	public void onUpdate()
-	{
+	public void onUpdate() {
+		if (doSneakFall.isChecked() && MC.player.isSneaking()) //MC.options.keySneak.isPressed())
+			return;
+		
 		ClientPlayerEntity player = MC.player;
 		Vec3d v = player.getVelocity();
 		
@@ -69,8 +73,7 @@ public final class GlideHack extends Hack implements UpdateListener
 			|| player.isClimbing() || v.y >= 0)
 			return;
 		
-		if(minHeight.getValue() > 0)
-		{
+		if(minHeight.getValue() > 0) {
 			Box box = player.getBoundingBox();
 			box = box.union(box.offset(0, -minHeight.getValue(), 0));
 			if(!MC.world.isSpaceEmpty(box))
