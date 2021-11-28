@@ -15,41 +15,41 @@ import net.wurstclient.SearchTags;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.mixinterface.IKeyBinding;
 import net.wurstclient.settings.CheckboxSetting;
+import net.wurstclient.settings.SliderSetting;
+import net.wurstclient.settings.SliderSetting.ValueDisplay;
 
-@SearchTags({"safe walk"})
-public final class SafeWalkHack extends Hack
-{
-	private final CheckboxSetting sneak =
-		new CheckboxSetting("Sneak at edges", "Visibly sneak at edges.", false);
+@SearchTags({ "safe walk", "scaffoldlegit", "speedbridge", "bridge" })
+public final class SafeWalkHack extends Hack {
+	private final CheckboxSetting sneak = new CheckboxSetting("Sneak at edges", "Visibly sneak at edges.", false);
+	
+	private final SliderSetting maxDistance = new SliderSetting("Sneak distance",
+			"How much \"safety\" offset is taken into account?\n\n"
+					+ "Good for making your speedbridging look legit.\n",
+			45, 30, 70, 1, ValueDisplay.INTEGER);
 	
 	private boolean sneaking;
 	
-	public SafeWalkHack()
-	{
+	public SafeWalkHack() {
 		super("SafeWalk");
 		setCategory(Category.MOVEMENT);
 		addSetting(sneak);
 	}
 	
 	@Override
-	protected void onEnable()
-	{
+	protected void onEnable() {
 		WURST.getHax().parkourHack.setEnabled(false);
 		sneaking = false;
 	}
 	
 	@Override
-	protected void onDisable()
-	{
-		if(sneaking)
+	protected void onDisable() {
+		if (sneaking)
 			setSneaking(false);
 	}
 	
-	public void onClipAtLedge(boolean clipping)
-	{
-		if(!isEnabled() || !sneak.isChecked() || !MC.player.isOnGround())
-		{
-			if(sneaking)
+	public void onClipAtLedge(boolean clipping) {
+		if (!isEnabled() || !sneak.isChecked() || !MC.player.isOnGround()) {
+			if (sneaking)
 				setSneaking(false);
 			
 			return;
@@ -58,23 +58,23 @@ public final class SafeWalkHack extends Hack
 		ClientPlayerEntity player = MC.player;
 		Box bb = player.getBoundingBox();
 		float stepHeight = player.stepHeight;
+		float dMaxDistance = (maxDistance.getValueF() / 100);
 		
-		for(double x = -0.05; x <= 0.05; x += 0.05)
-			for(double z = -0.05; z <= 0.05; z += 0.05)
-				if(MC.world.isSpaceEmpty(player, bb.offset(x, -stepHeight, z)))
+		for (double x = -dMaxDistance; x <= dMaxDistance; x += dMaxDistance)
+			for (double z = -dMaxDistance; z <= dMaxDistance; z += dMaxDistance)
+				if (MC.world.isSpaceEmpty(player, bb.offset(x, -stepHeight, z)))
 					clipping = true;
 				
 		setSneaking(clipping);
 	}
 	
-	private void setSneaking(boolean sneaking)
-	{
-		IKeyBinding sneakKey = (IKeyBinding)MC.options.keySneak;
+	private void setSneaking(boolean sneaking) {
+		IKeyBinding sneakKey = (IKeyBinding) MC.options.keySneak;
 		
-		if(sneaking)
-			((KeyBinding)sneakKey).setPressed(true);
+		if (sneaking)
+			((KeyBinding) sneakKey).setPressed(true);
 		else
-			((KeyBinding)sneakKey).setPressed(sneakKey.isActallyPressed());
+			((KeyBinding) sneakKey).setPressed(sneakKey.isActallyPressed());
 		
 		this.sneaking = sneaking;
 	}
