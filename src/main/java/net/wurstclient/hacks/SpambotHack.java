@@ -56,15 +56,20 @@ public final class SpambotHack extends Hack implements UpdateListener {
 			return;
 		}
 
-		sendMessage(evaluateMessage(message));
+		sendSpamMessage(evaluateMessage(message));
 		timer = spamDelay.getValueI();
 	}
 
-	public void sendMessage(String message) {
-		if (message.equals("")) {
+	private void sendSpamMessage(String message) {
+		if (message.equals(""))
 			ChatUtils.error("You don't have a spam message set!" +
 							"Use .spam <message> to set one, then re-enable the hack.");
-		} else if (message.startsWith(".")) {
+		else
+			sendMessage(message);
+	}
+	
+	public void sendMessage(String message) {
+		if (message.startsWith(".")) {
 			// Message is Wurst command
 			WURST.getCmdProcessor().process(message.substring(1));
 		} else {
