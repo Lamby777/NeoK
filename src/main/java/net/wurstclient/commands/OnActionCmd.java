@@ -10,7 +10,6 @@ package net.wurstclient.commands;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map.Entry;
 
@@ -125,7 +124,26 @@ public final class OnActionCmd extends Command {
 		}
 	}
 	
-	public void unbindAction(String[] args) {}
+	public void unbindAction(String[] args) {
+		if (args.length != 2) return;
+		String unbindId = args[1];
+		
+		try {
+			JsonObject parsed = JsonUtils.parseFileToObject(bindsFile).json.getAsJsonObject();
+			
+			parsed.remove(unbindId);
+			
+			JsonUtils.toJson(parsed, bindsFile);
+			
+			ChatUtils.message("Unbound possible action with ID \""+ unbindId +"!\"");
+		} catch (JsonException | IOException e) {
+			// File failed to parse
+			ChatUtils.error("There was a problem reading your binds JSON file. Does it even exist? " +
+							"If you want to delete your list and start fresh, type .binds wipe");
+			e.printStackTrace();
+		}
+	}
+	
 	public void wipeBinds() {
 		try {
 			JsonUtils.toJson(new JsonObject(), bindsFile);
@@ -136,7 +154,9 @@ public final class OnActionCmd extends Command {
 		}
 	}
 	
-	private void listEvents() {}
+	private void listEvents() {
+		//
+	}
 	
 	private void listBinds() {
 		WsonObject parsed = null;
