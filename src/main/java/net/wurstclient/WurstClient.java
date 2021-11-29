@@ -50,12 +50,11 @@ import net.wurstclient.settings.SettingsFile;
 import net.wurstclient.update.WurstUpdater;
 import net.wurstclient.util.json.JsonException;
 
-public enum WurstClient
-{
+public enum WurstClient {
 	INSTANCE;
 	
 	public static final MinecraftClient MC = MinecraftClient.getInstance();
-	public static final IMinecraftClient IMC = (IMinecraftClient)MC;
+	public static final IMinecraftClient IMC = (IMinecraftClient) MC;
 	
 	public static final String VERSION = "7.19";
 	public static final String MC_VERSION = "1.17.1";
@@ -83,8 +82,7 @@ public enum WurstClient
 	
 	private KeyBinding zoomKey;
 	
-	public void initialize()
-	{
+	public void initialize() {
 		System.out.println("Starting Wurst Client...");
 		
 		wurstFolder = createWurstFolder();
@@ -96,6 +94,8 @@ public enum WurstClient
 		
 		eventManager = new EventManager(this);
 		
+		//Path eventBindsFile =
+				wurstFolder.resolve("event-binds.json");
 		Path enabledHacksFile = wurstFolder.resolve("enabled-hacks.json");
 		hax = new HackList(enabledHacksFile);
 		
@@ -125,8 +125,7 @@ public enum WurstClient
 		cmdProcessor = new CmdProcessor(cmds);
 		eventManager.add(ChatOutputListener.class, cmdProcessor);
 		
-		KeybindProcessor keybindProcessor =
-			new KeybindProcessor(hax, keybinds, cmdProcessor);
+		KeybindProcessor keybindProcessor = new KeybindProcessor(hax, keybinds, cmdProcessor);
 		eventManager.add(KeyPressListener.class, keybindProcessor);
 		
 		hud = new IngameHUD();
@@ -143,152 +142,119 @@ public enum WurstClient
 		Path encFolder = createEncryptionFolder();
 		altManager = new AltManager(altsFile, encFolder);
 		
-		zoomKey = new KeyBinding("key.wurst.zoom", InputUtil.Type.KEYSYM,
-			GLFW.GLFW_KEY_V, "Zoom");
+		zoomKey = new KeyBinding("key.wurst.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, "Zoom");
 		KeyBindingHelper.registerKeyBinding(zoomKey);
 		
-		analytics.trackPageView("/mc" + MC_VERSION + "/v" + VERSION,
-			"Wurst " + VERSION + " MC" + MC_VERSION);
+		analytics.trackPageView("/mc" + MC_VERSION + "/v" + VERSION, "Wurst " + VERSION + " MC" + MC_VERSION);
 	}
 	
-	private Path createWurstFolder()
-	{
+	private Path createWurstFolder() {
 		Path dotMinecraftFolder = MC.runDirectory.toPath().normalize();
 		Path wurstFolder = dotMinecraftFolder.resolve("wurst");
 		
-		try
-		{
+		try {
 			Files.createDirectories(wurstFolder);
 			
-		}catch(IOException e)
-		{
-			throw new RuntimeException(
-				"Couldn't create .minecraft/wurst folder.", e);
+		} catch (IOException e) {
+			throw new RuntimeException("Couldn't create .minecraft/wurst folder.", e);
 		}
 		
 		return wurstFolder;
 	}
 	
-	private Path createEncryptionFolder()
-	{
-		Path encFolder =
-			Paths.get(System.getProperty("user.home"), ".Wurst encryption")
-				.normalize();
+	private Path createEncryptionFolder() {
+		Path encFolder = Paths.get(System.getProperty("user.home"), ".Wurst encryption").normalize();
 		
-		try
-		{
+		try {
 			Files.createDirectories(encFolder);
-			if(Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS)
+			if (Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS)
 				Files.setAttribute(encFolder, "dos:hidden", true);
 			
 			Path readme = encFolder.resolve("READ ME I AM VERY IMPORTANT.txt");
 			String readmeText = "DO NOT SHARE THESE FILES WITH ANYONE!\r\n"
-				+ "They are encryption keys that protect your alt list file from being read by someone else.\r\n"
-				+ "If someone is asking you to send these files, they are 100% trying to scam you.\r\n"
-				+ "\r\n"
-				+ "DO NOT EDIT, RENAME OR DELETE THESE FILES! (unless you know what you're doing)\r\n"
-				+ "If you do, Wurst's Alt Manager can no longer read your alt list and will replace it with a blank one.\r\n"
-				+ "In other words, YOUR ALT LIST WILL BE DELETED.";
-			Files.write(readme, readmeText.getBytes("UTF-8"),
-				StandardOpenOption.CREATE);
+					+ "They are encryption keys that protect your alt list file from being read by someone else.\r\n"
+					+ "If someone is asking you to send these files, they are 100% trying to scam you.\r\n" + "\r\n"
+					+ "DO NOT EDIT, RENAME OR DELETE THESE FILES! (unless you know what you're doing)\r\n"
+					+ "If you do, Wurst's Alt Manager can no longer read your alt list and will replace it with a blank one.\r\n"
+					+ "In other words, YOUR ALT LIST WILL BE DELETED.";
+			Files.write(readme, readmeText.getBytes("UTF-8"), StandardOpenOption.CREATE);
 			
-		}catch(IOException e)
-		{
-			throw new RuntimeException(
-				"Couldn't create '.Wurst encryption' folder.", e);
+		} catch (IOException e) {
+			throw new RuntimeException("Couldn't create '.Wurst encryption' folder.", e);
 		}
 		
 		return encFolder;
 	}
 	
-	public String translate(String key)
-	{
-		if(otfs.translationsOtf.getForceEnglish().isChecked())
+	public String translate(String key) {
+		if (otfs.translationsOtf.getForceEnglish().isChecked())
 			return IMC.getLanguageManager().getEnglish().get(key);
 		return I18n.translate(key);
 	}
 	
-	public WurstAnalytics getAnalytics()
-	{
+	public WurstAnalytics getAnalytics() {
 		return analytics;
 	}
 	
-	public EventManager getEventManager()
-	{
+	public EventManager getEventManager() {
 		return eventManager;
 	}
 	
-	public void saveSettings()
-	{
+	public void saveSettings() {
 		settingsFile.save();
 	}
 	
-	public ArrayList<Path> listSettingsProfiles()
-	{
-		if(!Files.isDirectory(settingsProfileFolder))
+	public ArrayList<Path> listSettingsProfiles() {
+		if (!Files.isDirectory(settingsProfileFolder))
 			return new ArrayList<>();
 		
-		try(Stream<Path> files = Files.list(settingsProfileFolder))
-		{
-			return files.filter(Files::isRegularFile)
-				.collect(Collectors.toCollection(ArrayList::new));
+		try (Stream<Path> files = Files.list(settingsProfileFolder)) {
+			return files.filter(Files::isRegularFile).collect(Collectors.toCollection(ArrayList::new));
 			
-		}catch(IOException e)
-		{
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public void loadSettingsProfile(String fileName)
-		throws IOException, JsonException
-	{
+	public void loadSettingsProfile(String fileName) throws IOException, JsonException {
 		settingsFile.loadProfile(settingsProfileFolder.resolve(fileName));
 	}
 	
-	public void saveSettingsProfile(String fileName)
-		throws IOException, JsonException
-	{
+	public void saveSettingsProfile(String fileName) throws IOException, JsonException {
 		settingsFile.saveProfile(settingsProfileFolder.resolve(fileName));
 	}
 	
-	public HackList getHax()
-	{
+	public HackList getHax() {
 		return hax;
 	}
 	
-	public CmdList getCmds()
-	{
+	public CmdList getCmds() {
 		return cmds;
 	}
 	
-	public OtfList getOtfs()
-	{
+	public OtfList getOtfs() {
 		return otfs;
 	}
 	
-	public Feature getFeatureByName(String name)
-	{
+	public Feature getFeatureByName(String name) {
 		Hack hack = getHax().getHackByName(name);
-		if(hack != null)
+		if (hack != null)
 			return hack;
 		
 		Command cmd = getCmds().getCmdByName(name.substring(1));
-		if(cmd != null)
+		if (cmd != null)
 			return cmd;
 		
 		OtherFeature otf = getOtfs().getOtfByName(name);
 		return otf;
 	}
 	
-	public KeybindList getKeybinds()
-	{
+	public KeybindList getKeybinds() {
 		return keybinds;
 	}
 	
-	public ClickGui getGui()
-	{
-		if(!guiInitialized)
-		{
+	public ClickGui getGui() {
+		if (!guiInitialized) {
 			guiInitialized = true;
 			gui.init();
 		}
@@ -296,64 +262,52 @@ public enum WurstClient
 		return gui;
 	}
 	
-	public Navigator getNavigator()
-	{
+	public Navigator getNavigator() {
 		return navigator;
 	}
 	
-	public CmdProcessor getCmdProcessor()
-	{
+	public CmdProcessor getCmdProcessor() {
 		return cmdProcessor;
 	}
 	
-	public IngameHUD getHud()
-	{
+	public IngameHUD getHud() {
 		return hud;
 	}
 	
-	public RotationFaker getRotationFaker()
-	{
+	public RotationFaker getRotationFaker() {
 		return rotationFaker;
 	}
 	
-	public FriendsList getFriends()
-	{
+	public FriendsList getFriends() {
 		return friends;
 	}
 	
-	public boolean isEnabled()
-	{
+	public boolean isEnabled() {
 		return enabled;
 	}
 	
-	public void setEnabled(boolean enabled)
-	{
+	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 		
-		if(!enabled)
-		{
+		if (!enabled) {
 			hax.panicHack.setEnabled(true);
 			hax.panicHack.onUpdate();
 		}
 	}
 	
-	public WurstUpdater getUpdater()
-	{
+	public WurstUpdater getUpdater() {
 		return updater;
 	}
 	
-	public Path getWurstFolder()
-	{
+	public Path getWurstFolder() {
 		return wurstFolder;
 	}
 	
-	public KeyBinding getZoomKey()
-	{
+	public KeyBinding getZoomKey() {
 		return zoomKey;
 	}
 	
-	public AltManager getAltManager()
-	{
+	public AltManager getAltManager() {
 		return altManager;
 	}
 }

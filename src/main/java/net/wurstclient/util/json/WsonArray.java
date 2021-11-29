@@ -17,7 +17,7 @@ import com.google.gson.JsonElement;
 
 public final class WsonArray
 {
-	private final JsonArray json;
+	public final JsonArray json;
 	
 	public WsonArray(JsonArray json)
 	{
