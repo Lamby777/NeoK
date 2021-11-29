@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 import net.wurstclient.DontBlock;
 import net.wurstclient.command.CmdError;
@@ -87,7 +86,7 @@ public final class OnActionCmd extends Command {
 			ChatUtils.warning("Binds file does not exist (yet). Making one now...\n" +
 							"(This is normal if you haven't made binds yet)");
 			try {
-				JsonUtils.toJson(new JsonObject(), bindsFile);
+				JsonUtils.toJson(new JsonArray(), bindsFile);
 				parsed = JsonUtils.parseFileToArray(bindsFile);
 			} catch (JsonException | IOException newFileFail) {
 				ChatUtils.error("Failed to create new file");
