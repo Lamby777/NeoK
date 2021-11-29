@@ -10,9 +10,12 @@ package net.wurstclient.commands;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map.Entry;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import net.wurstclient.DontBlock;
@@ -54,11 +57,11 @@ public final class OnActionCmd extends Command {
 				break;
 			
 			case "list-events":
-				listEvents(args);
+				listEvents();
 				break;
 			
 			case "list-binds":
-				listBinds(args);
+				listBinds();
 				break;
 			
 			case "wipe":
@@ -123,7 +126,36 @@ public final class OnActionCmd extends Command {
 	}
 	
 	public void unbindAction(String[] args) {}
-	public void wipeBinds() {}
-	private void listEvents(String[] args) {}
-	private void listBinds(String[] args) {}
+	public void wipeBinds() {
+		try {
+			JsonUtils.toJson(new JsonObject(), bindsFile);
+			ChatUtils.message("Wiped event action binds!");
+		} catch (JsonException | IOException e) {
+			ChatUtils.error("File does not exist");
+			e.printStackTrace();
+		}
+	}
+	
+	private void listEvents() {}
+	
+	private void listBinds() {
+		WsonObject parsed = null;
+		try {
+			parsed = JsonUtils.parseFileToObject(bindsFile);
+		    ChatUtils.message("Binds list:");
+			for (Entry<String, JsonElement> entry : parsed.json.entrySet()) {
+			    String key = entry.getKey();
+			    JsonElement value = entry.getValue();
+			    
+			    JsonArray arr = value.getAsJsonArray();
+			    
+			    ChatUtils.message("ID " + key + " on event " + arr.get(0) + " runs action " + arr.get(1));
+			}
+		} catch (JsonException | IOException e) {
+			// File failed to parse
+			ChatUtils.error("There was a problem reading your binds JSON file. Does it even exist? " +
+							"If you want to delete your list and start fresh, type .binds wipe");
+			e.printStackTrace();
+		}
+	}
 }
