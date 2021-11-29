@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import net.wurstclient.DontBlock;
 import net.wurstclient.command.CmdError;
@@ -22,7 +23,7 @@ import net.wurstclient.command.Command;
 import net.wurstclient.util.ChatUtils;
 import net.wurstclient.util.json.JsonException;
 import net.wurstclient.util.json.JsonUtils;
-import net.wurstclient.util.json.WsonArray;
+import net.wurstclient.util.json.WsonObject;
 
 @DontBlock
 public final class OnActionCmd extends Command {
@@ -77,17 +78,17 @@ public final class OnActionCmd extends Command {
 		String event = args[2];
 		String action = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
 		
-		WsonArray parsed = null;
+		WsonObject parsed = null;
 		boolean skipFinally = false;
 		try {
-			parsed = JsonUtils.parseFileToArray(bindsFile);
+			parsed = JsonUtils.parseFileToObject(bindsFile);
 		} catch (NoSuchFileException e) {
 			// File doesn't exist, so make it
 			ChatUtils.warning("Binds file does not exist (yet). Making one now...\n" +
 							"(This is normal if you haven't made binds yet)");
 			try {
-				JsonUtils.toJson(new JsonArray(), bindsFile);
-				parsed = JsonUtils.parseFileToArray(bindsFile);
+				JsonUtils.toJson(new JsonObject(), bindsFile);
+				parsed = JsonUtils.parseFileToObject(bindsFile);
 			} catch (JsonException | IOException newFileFail) {
 				ChatUtils.error("Failed to create new file");
 				newFileFail.printStackTrace();
@@ -106,12 +107,11 @@ public final class OnActionCmd extends Command {
 					JsonArray newElement = new JsonArray();
 					
 					// Add ID, then event, then action
-					newElement.add(bindId);
 					newElement.add(event);
 					newElement.add(action);
 					
-					parsed.json.add(newElement);
-					JsonUtils.toJson(parsed.toJsonArray(), bindsFile);
+					parsed.json.add(bindId, newElement);
+					JsonUtils.toJson(parsed.toJsonObject(), bindsFile);
 					
 					ChatUtils.message("Bound action \""+ bindId +"\" to event \""+ event +"!\"");
 				} catch (IOException | JsonException e) {

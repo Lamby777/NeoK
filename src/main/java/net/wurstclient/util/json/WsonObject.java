@@ -16,7 +16,7 @@ import com.google.gson.JsonObject;
 
 public final class WsonObject
 {
-	private final JsonObject json;
+	public final JsonObject json;
 	
 	public WsonObject(JsonObject json)
 	{
