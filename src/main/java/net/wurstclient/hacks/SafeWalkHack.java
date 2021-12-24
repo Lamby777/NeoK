@@ -33,6 +33,7 @@ public final class SafeWalkHack extends Hack {
 		super("SafeWalk");
 		setCategory(Category.MOVEMENT);
 		addSetting(sneak);
+		addSetting(maxDistance);
 	}
 	
 	@Override
