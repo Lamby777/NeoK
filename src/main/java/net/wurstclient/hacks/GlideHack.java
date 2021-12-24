@@ -93,6 +93,6 @@ public final class GlideHack extends Hack implements UpdateListener {
 		}
 		
 		player.setVelocity(v.x, Math.max(v.y, -fallSpeed.getValue()), v.z);
-		player.flyingSpeed *= moveSpeed.getValueF();
+		player.airStrafingSpeed *= moveSpeed.getValueF();
 	}
 }
