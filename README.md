@@ -10,6 +10,8 @@ please go contribute to [the original repo](https://github.com/Wurst-Imperium/Wu
 To work on the project, you need to set it up the exactly the same way as Wurst.
 You can find instructions in [the README file](https://github.com/Wurst-Imperium/Wurst7)!
 
+This project runs on Java 17. Make sure you have a JDK for Java 17 before reporting build errors!
+
 ## License
 
 This code is licensed under the GNU General Public License v3.
