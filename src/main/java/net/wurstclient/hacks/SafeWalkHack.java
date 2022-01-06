@@ -23,9 +23,8 @@ public final class SafeWalkHack extends Hack {
 	private final CheckboxSetting sneak = new CheckboxSetting("Sneak at edges", "Visibly sneak at edges.", false);
 	
 	private final SliderSetting maxDistance = new SliderSetting("Sneak distance",
-			"How much \"safety\" offset is taken into account?\n\n"
-					+ "Good for making your speedbridging look legit.\n",
-			45, 30, 70, 1, ValueDisplay.INTEGER);
+			"I have officially lost my marbles. Just log into a world and tinker with this setting, I couldn't care less.",
+			45, 30, 200, 1, ValueDisplay.INTEGER);
 	
 	private boolean sneaking;
 	
