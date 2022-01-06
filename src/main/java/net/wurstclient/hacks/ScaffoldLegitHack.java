@@ -24,7 +24,7 @@ public final class ScaffoldLegitHack extends Hack {
 	private final SliderSetting maxDistance = new SliderSetting("Maximum Distance to Edge",
 			"How much \"safety\" offset is taken into account?\n\n"
 					+ "Good for making your speedbridging look legit.\n",
-			45, 30, 70, 1, ValueDisplay.INTEGER);
+			0.05, 0.01, 1, 0.01, ValueDisplay.PERCENTAGE);
 	
 	private boolean sneaking;
 	
@@ -47,7 +47,7 @@ public final class ScaffoldLegitHack extends Hack {
 			setSneaking(false);
 	}
 	
-	public void onClipAtLedge(boolean clipping) {
+	public void onUpdate(boolean clipping) {
 		if (!isEnabled()) {
 			if (sneaking)
 				setSneaking(false);
@@ -57,12 +57,16 @@ public final class ScaffoldLegitHack extends Hack {
 		ClientPlayerEntity player = MC.player;
 		Box bb = player.getBoundingBox();
 		float stepHeight = player.stepHeight;
-		float dMaxDistance = (maxDistance.getValueF() / 100);
+		double mdVal = maxDistance.getValue();
 		
-		for (double x = -dMaxDistance; x <= dMaxDistance; x += dMaxDistance)
-			for (double z = -dMaxDistance; z <= dMaxDistance; z += dMaxDistance)
+		for (double x = -mdVal; x <= mdVal; x += mdVal)
+			for (double z = -mdVal; z <= mdVal; z += mdVal)
 				if (MC.world.isSpaceEmpty(player, bb.offset(x, -stepHeight, z)))
 					clipping = true;
+		
+		//Vec3d pos = MC.player.getPos();
+		
+		//if (pos.x > (pos.x - (int)pos.x)) {}
 				
 		setSneaking(clipping);
 	}
