@@ -1,4 +1,4 @@
-# NeoK (New K-Client) for 1.17
+# NeoK (New K-Client) for 1.17+
 
 ## ⚠ IMPORTANT ⚠
 
