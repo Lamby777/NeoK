@@ -72,7 +72,7 @@ public final class ScaffoldLegitHack extends Hack {
 	}
 	
 	private void setSneaking(boolean sneaking) {
-		IKeyBinding sneakKey = (IKeyBinding) MC.options.keySneak;
+		IKeyBinding sneakKey = (IKeyBinding) MC.options.sneakKey;
 		
 		if (sneaking)
 			((KeyBinding) sneakKey).setPressed(true);
