@@ -83,6 +83,11 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 	public final SliderSetting fov =
 		new SliderSetting("FOV", 360, 30, 360, 10, ValueDisplay.DEGREES);
 	
+	private final CheckboxSetting damageIndicator = new CheckboxSetting(
+		"Damage indicator",
+		"Renders a colored box within the target, inversely proportional to its remaining health.",
+		true);
+	
 	private final CheckboxSetting filterPlayers = new CheckboxSetting(
 		"Filter players", "Won't attack other players.", false);
 	
@@ -148,6 +153,7 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		addSetting(ranDelay);
 		addSetting(priority);
 		addSetting(fov);
+		addSetting(damageIndicator);
 		addSetting(filterPlayers);
 		addSetting(filterSleeping);
 		addSetting(filterFlying);
@@ -300,8 +306,9 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 	}
 	
 	@Override
-	public void onRender(MatrixStack matrixStack, float partialTicks) {
-		if (renderTarget == null)
+	public void onRender(MatrixStack matrixStack, float partialTicks)
+	{
+		if(renderTarget == null || !damageIndicator.isChecked())
 			return;
 		
 		// GL settings
