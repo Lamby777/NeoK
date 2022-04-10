@@ -69,7 +69,7 @@ public final class InvWalkHack extends Hack implements UpdateListener
 			MC.options.sprintKey, MC.options.sneakKey};
 		
 		for(KeyBinding key : keys)
-			key.setPressed(((IKeyBinding)key).isActallyPressed());
+			key.setPressed(((IKeyBinding)key).isActuallyPressed());
 	}
 	
 	private boolean isAllowedScreen(Screen screen)

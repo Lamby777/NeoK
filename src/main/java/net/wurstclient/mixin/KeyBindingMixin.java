@@ -22,7 +22,7 @@ public class KeyBindingMixin implements IKeyBinding
 	private InputUtil.Key boundKey;
 	
 	@Override
-	public boolean isActallyPressed()
+	public boolean isActuallyPressed()
 	{
 		long handle = WurstClient.MC.getWindow().getHandle();
 		int code = boundKey.getCode();

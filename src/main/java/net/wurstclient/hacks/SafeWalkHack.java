@@ -24,9 +24,9 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 public final class SafeWalkHack extends Hack {
 	private final CheckboxSetting sneak = new CheckboxSetting("Sneak at edges", "Visibly sneak at edges.", false);
 
-	private final SliderSetting maxDistance = new SliderSetting("Sneak distance",
-			"I have officially lost my marbles. Just log into a world and tinker with this setting, I couldn't care less.",
-			45, 30, 200, 1, ValueDisplay.INTEGER);
+	private final SliderSetting maxDistance = new SliderSetting("Maximum Distance to Edge",
+			"How much \"safety\" offset is taken into account?\n\n" + "Good for making your speedbridging look legit.",
+			0.05, 0.01, 1, 0.01, ValueDisplay.PERCENTAGE);
 
 	private boolean sneaking;
 
@@ -58,7 +58,7 @@ public final class SafeWalkHack extends Hack {
 		ClientPlayerEntity player = MC.player;
 		Box bb = player.getBoundingBox();
 		float stepHeight = player.stepHeight;
-		float dMaxDistance = (maxDistance.getValueF() / 100);
+		float dMaxDistance = maxDistance.getValueF();
 
 		for (double x = -dMaxDistance; x <= dMaxDistance; x += dMaxDistance)
 			for (double z = -dMaxDistance; z <= dMaxDistance; z += dMaxDistance)
@@ -71,8 +71,7 @@ public final class SafeWalkHack extends Hack {
 		IKeyBinding sneakKey = (IKeyBinding) MC.options.sneakKey;
 
 		if (sneaking) ((KeyBinding) sneakKey).setPressed(true);
-		else
-			((KeyBinding) sneakKey).setPressed(sneakKey.isActallyPressed());
+		else((KeyBinding) sneakKey).setPressed(sneakKey.isActuallyPressed());
 
 		this.sneaking = sneaking;
 	}
