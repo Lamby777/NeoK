@@ -8,7 +8,6 @@
 package net.wurstclient.hacks;
 
 import java.util.Comparator;
-import java.util.Random;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -30,9 +29,9 @@ import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.mob.WaterCreatureEntity;
 import net.minecraft.entity.mob.ZombifiedPiglinEntity;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.GolemEntity;
-import net.minecraft.entity.passive.HorseBaseEntity;
 import net.minecraft.entity.passive.MerchantEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
@@ -46,8 +45,10 @@ import net.wurstclient.events.PostMotionListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.AttackSpeedSliderSetting;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.EnumSetting;
+import net.wurstclient.settings.PauseAttackOnContainersSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.FakePlayerEntity;
@@ -61,17 +62,8 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 					+ "Anything that is further away than the\n" + "specified value will not be attacked.",
 			5, 1, 10, 0.05, ValueDisplay.DECIMAL);
 	
-	private final SliderSetting hitDelay = new SliderSetting("Delay",
-			"Delay between hits.\n"
-			+ "Set this to 0 for 1.9+ servers.",
-			0, 0, 200, 1, ValueDisplay.INTEGER);
-	
-	private final SliderSetting ranDelay = new SliderSetting("CPS Spoofer",
-			"Range for the additional random delay between hits.\n"
-			+ "THE DELAY ONLY ADDS NUMBERS!\n"
-			+ "It doesn't subtract, so make sure\n"
-			+ "your non-random delay is your minimum delay.",
-			0, 0, 40, 1, ValueDisplay.INTEGER);
+	private final AttackSpeedSliderSetting speed =
+		new AttackSpeedSliderSetting();
 	
 	private final EnumSetting<Priority> priority = new EnumSetting<>("Priority",
 			"Determines which entity will be attacked first.\n"
@@ -80,13 +72,16 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 					+ "\u00a7lHealth\u00a7r - Attacks the weakest entity.",
 			Priority.values(), Priority.ANGLE);
 	
-	public final SliderSetting fov =
+	private final SliderSetting fov =
 		new SliderSetting("FOV", 360, 30, 360, 10, ValueDisplay.DEGREES);
 	
 	private final CheckboxSetting damageIndicator = new CheckboxSetting(
 		"Damage indicator",
 		"Renders a colored box within the target, inversely proportional to its remaining health.",
 		true);
+	
+	private final PauseAttackOnContainersSetting pauseOnContainers =
+		new PauseAttackOnContainersSetting(true);
 	
 	private final CheckboxSetting filterPlayers = new CheckboxSetting(
 		"Filter players", "Won't attack other players.", false);
@@ -99,11 +94,13 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 				+ "look like corpses.",
 			false);
 	
-	private final SliderSetting filterFlying = new SliderSetting("Filter flying",
-			"Won't attack players that are at least\n" + "the given distance above ground.\n\n"
-					+ "Useful for servers that place a flying\n" + "player behind you to try and detect\n"
-					+ "your Killaura.",
-			0, 0, 2, 0.05, v -> v == 0 ? "off" : ValueDisplay.DECIMAL.getValueString(v));
+	private final SliderSetting filterFlying =
+		new SliderSetting("Filter flying",
+			"Won't attack players that are at least\n"
+				+ "the given distance above ground.\n\n"
+				+ "Useful for servers that place a flying\n"
+				+ "player behind you to try and detect\n" + "your Killaura.",
+			0, 0, 2, 0.05, ValueDisplay.DECIMAL.withLabel(0, "off"));
 	
 	private final CheckboxSetting filterMonsters = new CheckboxSetting("Filter monsters",
 			"Won't attack zombies, creepers, etc.", false);
@@ -142,18 +139,18 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 	private Entity target;
 	private Entity renderTarget;
 	private int timer;
-	private Random rand = new Random();
 	
 	public KillauraHack() {
 		super("Killaura");
 		setCategory(Category.COMBAT);
 		
 		addSetting(range);
-		addSetting(hitDelay);
-		addSetting(ranDelay);
+		addSetting(speed);
 		addSetting(priority);
 		addSetting(fov);
 		addSetting(damageIndicator);
+		addSetting(pauseOnContainers);
+		
 		addSetting(filterPlayers);
 		addSetting(filterSleeping);
 		addSetting(filterFlying);
@@ -183,6 +180,7 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		WURST.getHax().triggerBotHack.setEnabled(false);
 		WURST.getHax().tpAuraHack.setEnabled(false);
 		
+		speed.resetTimer();
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(PostMotionListener.class, this);
 		EVENTS.add(RenderListener.class, this);
@@ -199,12 +197,17 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 	}
 	
 	@Override
-	public void onUpdate() {
+	public void onUpdate()
+	{
+		speed.updateTimer();
+		if(!speed.isTimeToAttack())
+			return;
+		
+		if(pauseOnContainers.shouldPause())
+			return;
+		
 		ClientPlayerEntity player = MC.player;
 		ClientWorld world = MC.world;
-		
-		if (player.getAttackCooldownProgress(0) < 1)
-			return;
 		
 		double rangeSq = Math.pow(range.getValue(), 2);
 		Stream<Entity> stream = StreamSupport.stream(MC.world.getEntities().spliterator(), true)
@@ -252,9 +255,12 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		if (filterBabies.isChecked())
 			stream = stream.filter(e -> !(e instanceof PassiveEntity && ((PassiveEntity) e).isBaby()));
 		
-		if (filterPets.isChecked())
-			stream = stream.filter(e -> !(e instanceof TameableEntity && ((TameableEntity) e).isTamed()))
-					.filter(e -> !(e instanceof HorseBaseEntity && ((HorseBaseEntity) e).isTame()));
+		if(filterPets.isChecked())
+			stream = stream
+				.filter(e -> !(e instanceof TameableEntity
+					&& ((TameableEntity)e).isTamed()))
+				.filter(e -> !(e instanceof AbstractHorseEntity
+					&& ((AbstractHorseEntity)e).isTame()));
 		
 		if (filterTraders.isChecked())
 			stream = stream.filter(e -> !(e instanceof MerchantEntity));
@@ -292,17 +298,15 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 	
 	@Override
 	public void onPostMotion() {
-		if (timer > 0 || target == null)
-			return;
+		if (target == null) return;
 		
 		WURST.getHax().criticalsHack.doCritical();
 		ClientPlayerEntity player = MC.player;
 		MC.interactionManager.attackEntity(player, target);
 		player.swingHand(Hand.MAIN_HAND);
 		
-		// start timer
-		timer = hitDelay.getValueI() + rand.nextInt(ranDelay.getValueI()+1);
 		target = null;
+		speed.resetTimer();
 	}
 	
 	@Override
