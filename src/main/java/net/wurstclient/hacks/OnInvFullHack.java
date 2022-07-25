@@ -7,7 +7,6 @@
  */
 package net.wurstclient.hacks;
 
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.UpdateListener;
@@ -58,8 +57,7 @@ public final class OnInvFullHack extends Hack implements UpdateListener {
 			WURST.getCmdProcessor().process(message.substring(1));
 		} else {
 			// Otherwise, send to chat
-			ChatMessageC2SPacket packet = new ChatMessageC2SPacket(message);
-			MC.getNetworkHandler().sendPacket(packet);
+			MC.player.sendChatMessage(message);
 		}
 	}
 }
