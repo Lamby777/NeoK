@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -30,6 +30,8 @@ public abstract class ButtonWidgetMixin extends PressableWidget
 		MinecraftClient client, int mouseX, int mouseY)
 	{
 		int i = getYImage(isHovered());
+		int x = getX();
+		int y = getY();
 		drawTexture(matrixStack, x, y, 0, 46 + i * 20, width / 2, height / 2);
 		drawTexture(matrixStack, x + width / 2, y, 200 - width / 2, 46 + i * 20,
 			width / 2, height / 2);

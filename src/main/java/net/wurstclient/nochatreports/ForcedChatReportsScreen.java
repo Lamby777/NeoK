@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -16,6 +16,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralTextContent;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import net.wurstclient.WurstClient;
@@ -25,10 +26,16 @@ import net.wurstclient.util.LastServerRememberer;
 
 public final class ForcedChatReportsScreen extends Screen
 {
-	private static final List<String> DISCONNECT_REASONS =
+	private static final List<String> TRANSLATABLE_DISCONNECT_REASONS =
 		Arrays.asList("multiplayer.disconnect.missing_public_key",
 			"multiplayer.disconnect.invalid_public_key_signature",
-			"multiplayer.disconnect.invalid_public_key");
+			"multiplayer.disconnect.invalid_public_key",
+			"multiplayer.disconnect.unsigned_chat");
+	
+	private static final List<String> LITERAL_DISCONNECT_REASONS =
+		Arrays.asList("An internal error occurred in your connection.",
+			"A secure profile is required to join this server.",
+			"Secure profile expired.", "Secure profile invalid.");
 	
 	private final Screen prevScreen;
 	private final Text reason;
@@ -73,17 +80,19 @@ public final class ForcedChatReportsScreen extends Screen
 		int reconnectY = signaturesY + 24;
 		int backButtonY = reconnectY + 24;
 		
-		addDrawableChild(
-			signatureButton = new ButtonWidget(buttonX, signaturesY, 200, 20,
-				Text.literal(sigButtonMsg.get()), b -> toggleSignatures()));
+		addDrawableChild(signatureButton = ButtonWidget
+			.builder(Text.literal(sigButtonMsg.get()), b -> toggleSignatures())
+			.dimensions(buttonX, signaturesY, 200, 20).build());
 		
-		addDrawableChild(new ButtonWidget(buttonX, reconnectY, 200, 20,
-			Text.literal("Reconnect"),
-			b -> LastServerRememberer.reconnect(prevScreen)));
+		addDrawableChild(ButtonWidget
+			.builder(Text.literal("Reconnect"),
+				b -> LastServerRememberer.reconnect(prevScreen))
+			.dimensions(buttonX, reconnectY, 200, 20).build());
 		
-		addDrawableChild(new ButtonWidget(buttonX, backButtonY, 200, 20,
-			Text.translatable("gui.toMenu"),
-			b -> client.setScreen(prevScreen)));
+		addDrawableChild(ButtonWidget
+			.builder(Text.translatable("gui.toMenu"),
+				b -> client.setScreen(prevScreen))
+			.dimensions(buttonX, backButtonY, 200, 20).build());
 	}
 	
 	private void toggleSignatures()
@@ -120,10 +129,14 @@ public final class ForcedChatReportsScreen extends Screen
 		if(!WurstClient.INSTANCE.getOtfs().noChatReportsOtf.isActive())
 			return false;
 		
-		if(!(disconnectReason
-			.getContent() instanceof TranslatableTextContent tr))
-			return false;
+		if(disconnectReason.getContent() instanceof TranslatableTextContent tr
+			&& TRANSLATABLE_DISCONNECT_REASONS.contains(tr.getKey()))
+			return true;
 		
-		return DISCONNECT_REASONS.contains(tr.getKey());
+		if(disconnectReason.getContent() instanceof LiteralTextContent lt
+			&& LITERAL_DISCONNECT_REASONS.contains(lt.string()))
+			return true;
+		
+		return false;
 	}
 }

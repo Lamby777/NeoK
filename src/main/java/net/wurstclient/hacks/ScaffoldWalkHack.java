@@ -1,11 +1,13 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
  * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.hacks;
+
+import java.util.Arrays;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -89,10 +91,40 @@ public final class ScaffoldWalkHack extends Hack implements UpdateListener
 		int oldSlot = MC.player.getInventory().selectedSlot;
 		MC.player.getInventory().selectedSlot = newSlot;
 		
-		placeBlock(belowPlayer);
+		scaffoldTo(belowPlayer);
 		
 		// reset slot
 		MC.player.getInventory().selectedSlot = oldSlot;
+	}
+	
+	private void scaffoldTo(BlockPos belowPlayer)
+	{
+		// tries to place a block directly under the player
+		if(placeBlock(belowPlayer))
+			return;
+			
+		// if that doesn't work, tries to place a block next to the block that's
+		// under the player
+		Direction[] sides = Direction.values();
+		for(Direction side : sides)
+		{
+			BlockPos neighbor = belowPlayer.offset(side);
+			if(placeBlock(neighbor))
+				return;
+		}
+		
+		// if that doesn't work, tries to place a block next to a block that's
+		// next to the block that's under the player
+		for(Direction side : sides)
+			for(Direction side2 : Arrays.copyOfRange(sides, side.ordinal(), 6))
+			{
+				if(side.getOpposite().equals(side2))
+					continue;
+				
+				BlockPos neighbor = belowPlayer.offset(side).offset(side2);
+				if(placeBlock(neighbor))
+					return;
+			}
 	}
 	
 	private boolean placeBlock(BlockPos pos)

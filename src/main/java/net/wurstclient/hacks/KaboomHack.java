@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -57,7 +57,7 @@ public final class KaboomHack extends Hack implements UpdateListener
 		
 		// do explosion particles
 		new Explosion(MC.world, MC.player, MC.player.getX(), MC.player.getY(),
-			MC.player.getZ(), 6F, false, Explosion.DestructionType.NONE)
+			MC.player.getZ(), 6F, false, Explosion.DestructionType.KEEP)
 				.affectWorld(true);
 		
 		// get valid blocks

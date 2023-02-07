@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -50,6 +50,8 @@ public class DisconnectedScreenMixin extends Screen
 		if(!WurstClient.INSTANCE.isEnabled())
 			return;
 		
+		System.out.println("Disconnected: " + reason);
+		
 		if(ForcedChatReportsScreen.isCausedByNoChatReports(reason))
 		{
 			client.setScreen(new ForcedChatReportsScreen(parent));
@@ -71,16 +73,20 @@ public class DisconnectedScreenMixin extends Screen
 		int backButtonY =
 			Math.min(height / 2 + reasonHeight / 2 + 9, height - 30);
 		
-		addDrawableChild(new ButtonWidget(backButtonX, backButtonY + 24, 200,
-			20, Text.literal("Reconnect"),
-			b -> LastServerRememberer.reconnect(parent)));
+		addDrawableChild(ButtonWidget
+			.builder(Text.literal("Reconnect"),
+				b -> LastServerRememberer.reconnect(parent))
+			.dimensions(backButtonX, backButtonY + 24, 200, 20).build());
 		
-		autoReconnectButton = addDrawableChild(
-			new ButtonWidget(backButtonX, backButtonY + 48, 200, 20,
-				Text.literal("AutoReconnect"), b -> pressAutoReconnect()));
+		autoReconnectButton = addDrawableChild(ButtonWidget
+			.builder(Text.literal("AutoReconnect"), b -> pressAutoReconnect())
+			.dimensions(backButtonX, backButtonY + 48, 200, 20).build());
 		
-		if(WurstClient.INSTANCE.getHax().autoReconnectHack.isEnabled())
-			autoReconnectTimer = 100;
+		AutoReconnectHack autoReconnect =
+			WurstClient.INSTANCE.getHax().autoReconnectHack;
+		
+		if(autoReconnect.isEnabled())
+			autoReconnectTimer = autoReconnect.getWaitTicks();
 	}
 	
 	private void pressAutoReconnect()
@@ -91,7 +97,7 @@ public class DisconnectedScreenMixin extends Screen
 		autoReconnect.setEnabled(!autoReconnect.isEnabled());
 		
 		if(autoReconnect.isEnabled())
-			autoReconnectTimer = 100;
+			autoReconnectTimer = autoReconnect.getWaitTicks();
 	}
 	
 	@Override

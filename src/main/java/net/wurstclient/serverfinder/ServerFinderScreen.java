@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -47,17 +47,22 @@ public class ServerFinderScreen extends Screen
 	public void init()
 	{
 		addDrawableChild(searchButton =
-			new ButtonWidget(width / 2 - 100, height / 4 + 96 + 12, 200, 20,
-				Text.literal("Search"), b -> searchOrCancel()));
-		
-		addDrawableChild(new ButtonWidget(width / 2 - 100,
-			height / 4 + 120 + 12, 200, 20, Text.literal("Tutorial"),
-			b -> Util.getOperatingSystem().open(
-				"https://www.wurstclient.net/wiki/Special_Features/Server_Finder/")));
+			ButtonWidget.builder(Text.literal("Search"), b -> searchOrCancel())
+				.dimensions(width / 2 - 100, height / 4 + 96 + 12, 200, 20)
+				.build());
 		
 		addDrawableChild(
-			new ButtonWidget(width / 2 - 100, height / 4 + 144 + 12, 200, 20,
-				Text.literal("Back"), b -> client.setScreen(prevScreen)));
+			ButtonWidget
+				.builder(Text.literal("Tutorial"),
+					b -> Util.getOperatingSystem().open(
+						"https://www.wurstclient.net/serverfinder-tutorial/"))
+				.dimensions(width / 2 - 100, height / 4 + 120 + 12, 200, 20)
+				.build());
+		
+		addDrawableChild(ButtonWidget
+			.builder(Text.literal("Back"), b -> client.setScreen(prevScreen))
+			.dimensions(width / 2 - 100, height / 4 + 144 + 12, 200, 20)
+			.build());
 		
 		ipBox = new TextFieldWidget(textRenderer, width / 2 - 100,
 			height / 4 + 34, 200, 20, Text.literal(""));

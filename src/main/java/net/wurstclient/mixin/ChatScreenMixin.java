@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -12,11 +12,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.network.ChatPreviewer;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
@@ -27,9 +27,6 @@ public class ChatScreenMixin extends Screen
 {
 	@Shadow
 	protected TextFieldWidget chatField;
-	
-	@Shadow
-	private ChatPreviewer chatPreviewer;
 	
 	private ChatScreenMixin(WurstClient wurst, Text text)
 	{
@@ -44,37 +41,12 @@ public class ChatScreenMixin extends Screen
 	}
 	
 	@Inject(at = @At("HEAD"),
-		method = "updatePreviewer(Ljava/lang/String;)V",
-		cancellable = true)
-	private void onUpdatePreviewer(String chatText, CallbackInfo ci)
-	{
-		if(!shouldPreviewChat())
-			return;
-		
-		String normalized = normalize(chatText);
-		
-		if(normalized.startsWith(".say "))
-		{
-			// send preview, but only for the part after ".say "
-			chatPreviewer.tryRequest(normalized.substring(5));
-			ci.cancel();
-			
-		}else if(normalized.startsWith("."))
-		{
-			// disable & delete preview
-			chatPreviewer.disablePreview();
-			ci.cancel();
-		}
-	}
-	
-	@Inject(at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/client/network/ClientPlayerEntity;sendChatMessage(Ljava/lang/String;Lnet/minecraft/text/Text;)V"),
-		method = "sendMessage(Ljava/lang/String;Z)V",
+		method = "sendMessage(Ljava/lang/String;Z)Z",
 		cancellable = true)
 	public void onSendMessage(String message, boolean addToHistory,
-		CallbackInfo ci)
+		CallbackInfoReturnable<Boolean> cir)
 	{
-		if(!addToHistory || (message = normalize(message)).isEmpty())
+		if((message = normalize(message)).isEmpty())
 			return;
 		
 		ChatOutputEvent event = new ChatOutputEvent(message);
@@ -82,7 +54,7 @@ public class ChatScreenMixin extends Screen
 		
 		if(event.isCancelled())
 		{
-			ci.cancel();
+			cir.setReturnValue(true);
 			return;
 		}
 		
@@ -90,26 +62,21 @@ public class ChatScreenMixin extends Screen
 			return;
 		
 		String newMessage = event.getMessage();
-		client.inGameHud.getChatHud().addToMessageHistory(newMessage);
-		Text preview = chatPreviewer.tryConsumeResponse(newMessage);
+		if(addToHistory)
+			client.inGameHud.getChatHud().addToMessageHistory(newMessage);
 		
 		if(newMessage.startsWith("/"))
-			client.player.sendCommand(newMessage.substring(1), preview);
+			client.player.networkHandler
+				.sendChatCommand(newMessage.substring(1));
 		else
-			client.player.sendChatMessage(newMessage, preview);
+			client.player.networkHandler.sendChatMessage(newMessage);
 		
-		ci.cancel();
+		cir.setReturnValue(true);
 	}
 	
 	@Shadow
 	public String normalize(String chatText)
 	{
 		return null;
-	}
-	
-	@Shadow
-	private boolean shouldPreviewChat()
-	{
-		return false;
 	}
 }

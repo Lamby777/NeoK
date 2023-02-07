@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -34,8 +34,12 @@ public abstract class StatsScreenMixin extends Screen implements StatsListener
 	@Inject(at = {@At("TAIL")}, method = {"createButtons()V"})
 	private void onCreateButtons(CallbackInfo ci)
 	{
-		ButtonWidget toggleWurstButton = new ButtonWidget(width / 2 - 152,
-			height - 28, 150, 20, Text.literal(""), this::toggleWurst);
+		if(WurstClient.INSTANCE.getOtfs().disableOtf.shouldHideEnableButton())
+			return;
+		
+		ButtonWidget toggleWurstButton =
+			ButtonWidget.builder(Text.literal(""), this::toggleWurst)
+				.dimensions(width / 2 - 152, height - 28, 150, 20).build();
 		
 		updateWurstButtonText(toggleWurstButton);
 		addDrawableChild(toggleWurstButton);
@@ -51,7 +55,7 @@ public abstract class StatsScreenMixin extends Screen implements StatsListener
 				.equals(I18n.translate("gui.done")))
 				continue;
 			
-			button.x = width / 2 + 2;
+			button.setX(width / 2 + 2);
 			button.setWidth(150);
 		}
 	}

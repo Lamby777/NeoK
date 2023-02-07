@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Wurst-Imperium and contributors.
+ * Copyright (c) 2014-2023 Wurst-Imperium and contributors.
  *
  * This source code is subject to the terms of the GNU General Public
  * License, version 3. If a copy of the GPL was not distributed with this
@@ -247,7 +247,7 @@ public class CleanUpScreen extends Screen
 			String tooltip, PressAction pressAction)
 		{
 			super(x, y, 200, 20, Text.literal(messageSupplier.get()),
-				pressAction);
+				pressAction, ButtonWidget.DEFAULT_NARRATION_SUPPLIER);
 			this.messageSupplier = messageSupplier;
 			
 			if(tooltip.isEmpty())
