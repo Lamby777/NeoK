@@ -9,15 +9,15 @@ package net.wurstclient.clickgui.components;
 
 import java.util.Objects;
 
-import net.wurstclient.clickgui.screens.EditItemListScreen;
-import net.wurstclient.settings.ItemListSetting;
+import net.wurstclient.clickgui.screens.EditBookOffersScreen;
+import net.wurstclient.settings.BookOffersSetting;
 import net.wurstclient.settings.Setting;
 
-public final class ItemListEditButton extends AbstractListEditButton
+public final class BookOffersEditButton extends AbstractListEditButton
 {
-	private final ItemListSetting setting;
+	private final BookOffersSetting setting;
 	
-	public ItemListEditButton(ItemListSetting setting)
+	public BookOffersEditButton(BookOffersSetting setting)
 	{
 		this.setting = Objects.requireNonNull(setting);
 		setWidth(getDefaultWidth());
@@ -27,13 +27,13 @@ public final class ItemListEditButton extends AbstractListEditButton
 	@Override
 	protected void openScreen()
 	{
-		MC.setScreen(new EditItemListScreen(MC.currentScreen, setting));
+		MC.setScreen(new EditBookOffersScreen(MC.currentScreen, setting));
 	}
 	
 	@Override
 	protected String getText()
 	{
-		return setting.getName() + ": " + setting.getItemNames().size();
+		return setting.getName() + ": " + setting.getOffers().size();
 	}
 	
 	@Override

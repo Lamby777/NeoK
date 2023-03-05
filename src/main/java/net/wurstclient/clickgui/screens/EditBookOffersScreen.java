@@ -11,74 +11,83 @@ import java.util.List;
 
 import org.lwjgl.glfw.GLFW;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
-import net.wurstclient.settings.BlockListSetting;
-import net.wurstclient.util.BlockUtils;
+import net.minecraft.util.Identifier;
+import net.wurstclient.hacks.autolibrarian.BookOffer;
+import net.wurstclient.settings.BookOffersSetting;
 import net.wurstclient.util.ListWidget;
 import net.wurstclient.util.RenderUtils;
 
-public final class EditBlockListScreen extends Screen
+public final class EditBookOffersScreen extends Screen
 {
 	private final Screen prevScreen;
-	private final BlockListSetting blockList;
+	private final BookOffersSetting bookOffers;
 	
 	private ListGui listGui;
-	private TextFieldWidget blockNameField;
-	private ButtonWidget addButton;
+	private ButtonWidget editButton;
 	private ButtonWidget removeButton;
 	private ButtonWidget doneButton;
 	
-	private Block blockToAdd;
-	
-	public EditBlockListScreen(Screen prevScreen, BlockListSetting blockList)
+	public EditBookOffersScreen(Screen prevScreen, BookOffersSetting bookOffers)
 	{
 		super(Text.literal(""));
 		this.prevScreen = prevScreen;
-		this.blockList = blockList;
+		this.bookOffers = bookOffers;
 	}
 	
 	@Override
 	public void init()
 	{
-		listGui = new ListGui(client, this, blockList.getBlockNames());
-		
-		blockNameField = new TextFieldWidget(client.textRenderer,
-			width / 2 - 152, height - 55, 150, 18, Text.literal(""));
-		addSelectableChild(blockNameField);
-		blockNameField.setMaxLength(256);
+		listGui = new ListGui(client, this, bookOffers.getOffers());
 		
 		addDrawableChild(
-			addButton = ButtonWidget.builder(Text.literal("Add"), b -> {
-				blockList.add(blockToAdd);
-				blockNameField.setText("");
-			}).dimensions(width / 2 - 2, height - 56, 30, 20).build());
+			ButtonWidget
+				.builder(Text.literal("Add"),
+					b -> client
+						.setScreen(new AddBookOfferScreen(this, bookOffers)))
+				.dimensions(width / 2 - 154, height - 56, 100, 20).build());
+		
+		addDrawableChild(
+			editButton = ButtonWidget.builder(Text.literal("Edit"), b -> {
+				boolean selected = listGui.selected >= 0
+					&& listGui.selected < listGui.list.size();
+				if(!selected)
+					return;
+				
+				client.setScreen(new EditBookOfferScreen(this, bookOffers,
+					listGui.selected));
+			}).dimensions(width / 2 - 50, height - 56, 100, 20).build());
+		editButton.active = false;
 		
 		addDrawableChild(removeButton = ButtonWidget
-			.builder(Text.literal("Remove Selected"),
-				b -> blockList.remove(listGui.selected))
-			.dimensions(width / 2 + 52, height - 56, 100, 20).build());
+			.builder(Text.literal("Remove"),
+				b -> bookOffers.remove(listGui.selected))
+			.dimensions(width / 2 + 54, height - 56, 100, 20).build());
+		removeButton.active = false;
 		
 		addDrawableChild(ButtonWidget.builder(Text.literal("Reset to Defaults"),
 			b -> client.setScreen(new ConfirmScreen(b2 -> {
 				if(b2)
-					blockList.resetToDefaults();
-				client.setScreen(EditBlockListScreen.this);
+					bookOffers.resetToDefaults();
+				client.setScreen(EditBookOffersScreen.this);
 			}, Text.literal("Reset to Defaults"),
 				Text.literal("Are you sure?"))))
-			.dimensions(width - 108, 8, 100, 20).build());
+			.dimensions(width - 106, 6, 100, 20).build());
 		
 		addDrawableChild(doneButton = ButtonWidget
 			.builder(Text.literal("Done"), b -> client.setScreen(prevScreen))
-			.dimensions(width / 2 - 100, height - 28, 200, 20).build());
+			.dimensions(width / 2 - 100, height - 32, 200, 20).build());
 	}
 	
 	@Override
@@ -86,12 +95,14 @@ public final class EditBlockListScreen extends Screen
 	{
 		boolean childClicked = super.mouseClicked(mouseX, mouseY, mouseButton);
 		
-		blockNameField.mouseClicked(mouseX, mouseY, mouseButton);
 		listGui.mouseClicked(mouseX, mouseY, mouseButton);
 		
-		if(!childClicked && (mouseX < (width - 220) / 2
+		if(!childClicked && mouseButton == 0 && (mouseX < (width - 220) / 2
 			|| mouseX > width / 2 + 129 || mouseY < 32 || mouseY > height - 64))
 			listGui.selected = -1;
+		
+		if(mouseButton == GLFW.GLFW_MOUSE_BUTTON_4)
+			doneButton.onPress();
 		
 		return childClicked;
 	}
@@ -126,17 +137,25 @@ public final class EditBlockListScreen extends Screen
 		switch(keyCode)
 		{
 			case GLFW.GLFW_KEY_ENTER:
-			if(addButton.active)
-				addButton.onPress();
+			if(editButton.active)
+				editButton.onPress();
 			break;
 			
 			case GLFW.GLFW_KEY_DELETE:
-			if(!blockNameField.isFocused())
-				removeButton.onPress();
+			removeButton.onPress();
 			break;
 			
 			case GLFW.GLFW_KEY_ESCAPE:
+			case GLFW.GLFW_KEY_BACKSPACE:
 			doneButton.onPress();
+			break;
+			
+			case GLFW.GLFW_KEY_UP:
+			listGui.selectItem(listGui.selected - 1, 0, 0, 0);
+			break;
+			
+			case GLFW.GLFW_KEY_DOWN:
+			listGui.selectItem(listGui.selected + 1, 0, 0, 0);
 			break;
 			
 			default:
@@ -149,14 +168,11 @@ public final class EditBlockListScreen extends Screen
 	@Override
 	public void tick()
 	{
-		blockNameField.tick();
-		
-		String nameOrId = blockNameField.getText();
-		blockToAdd = BlockUtils.getBlockFromNameOrID(nameOrId);
-		addButton.active = blockToAdd != null;
-		
-		removeButton.active =
+		boolean selected =
 			listGui.selected >= 0 && listGui.selected < listGui.list.size();
+		
+		editButton.active = selected;
+		removeButton.active = selected;
 	}
 	
 	@Override
@@ -165,39 +181,16 @@ public final class EditBlockListScreen extends Screen
 	{
 		listGui.render(matrixStack, mouseX, mouseY, partialTicks);
 		
-		drawCenteredText(matrixStack, client.textRenderer,
-			blockList.getName() + " (" + listGui.getItemCount() + ")",
-			width / 2, 12, 0xffffff);
-		
 		matrixStack.push();
 		matrixStack.translate(0, 0, 300);
 		
-		blockNameField.render(matrixStack, mouseX, mouseY, partialTicks);
+		drawCenteredText(matrixStack, client.textRenderer,
+			bookOffers.getName() + " (" + listGui.getItemCount() + ")",
+			width / 2, 12, 0xffffff);
+		
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 		
-		matrixStack.translate(-64 + width / 2 - 152, 0, 0);
-		
-		if(blockNameField.getText().isEmpty() && !blockNameField.isFocused())
-			drawStringWithShadow(matrixStack, client.textRenderer,
-				"block name or ID", 68, height - 50, 0x808080);
-		
-		int border = blockNameField.isFocused() ? 0xffffffff : 0xffa0a0a0;
-		int black = 0xff000000;
-		
-		fill(matrixStack, 48, height - 56, 64, height - 36, border);
-		fill(matrixStack, 49, height - 55, 64, height - 37, black);
-		fill(matrixStack, 214, height - 56, 244, height - 55, border);
-		fill(matrixStack, 214, height - 37, 244, height - 36, border);
-		fill(matrixStack, 244, height - 56, 246, height - 36, border);
-		fill(matrixStack, 214, height - 55, 243, height - 52, black);
-		fill(matrixStack, 214, height - 40, 243, height - 37, black);
-		fill(matrixStack, 214, height - 55, 216, height - 37, black);
-		fill(matrixStack, 242, height - 55, 245, height - 37, black);
-		
 		matrixStack.pop();
-		
-		RenderUtils.drawItem(matrixStack, new ItemStack(blockToAdd),
-			width / 2 - 164, height - 52, false);
 	}
 	
 	@Override
@@ -215,11 +208,11 @@ public final class EditBlockListScreen extends Screen
 	private static class ListGui extends ListWidget
 	{
 		private final MinecraftClient mc;
-		private final List<String> list;
+		private final List<BookOffer> list;
 		private int selected = -1;
 		
-		public ListGui(MinecraftClient mc, EditBlockListScreen screen,
-			List<String> list)
+		public ListGui(MinecraftClient mc, EditBookOffersScreen screen,
+			List<BookOffer> list)
 		{
 			super(mc, screen.width, screen.height, 32, screen.height - 64, 30);
 			this.mc = mc;
@@ -258,19 +251,34 @@ public final class EditBlockListScreen extends Screen
 		protected void renderItem(MatrixStack matrixStack, int index, int x,
 			int y, int var4, int var5, int var6, float partialTicks)
 		{
-			String name = list.get(index);
-			Block block = BlockUtils.getBlockFromName(name);
-			ItemStack stack = new ItemStack(block);
-			TextRenderer fr = mc.textRenderer;
+			if(isSelectedItem(index))
+				drawSelectionOutline(matrixStack, x, y);
 			
+			Item item = Registries.ITEM.get(new Identifier("enchanted_book"));
+			ItemStack stack = new ItemStack(item);
 			RenderUtils.drawItem(matrixStack, stack, x + 1, y + 1, true);
-			String displayName = stack.isEmpty() ? "\u00a7ounknown block\u00a7r"
-				: stack.getName().getString();
-			fr.draw(matrixStack, displayName, x + 28, y, 0xf0f0f0);
-			fr.draw(matrixStack, name, x + 28, y + 9, 0xa0a0a0);
-			fr.draw(matrixStack,
-				"ID: " + Block.getRawIdFromState(block.getDefaultState()),
-				x + 28, y + 18, 0xa0a0a0);
+			
+			TextRenderer tr = mc.textRenderer;
+			BookOffer bookOffer = list.get(index);
+			String name = bookOffer.getEnchantmentNameWithLevel();
+			
+			Enchantment enchantment = bookOffer.getEnchantment();
+			int nameColor = enchantment.isCursed() ? 0xff5555 : 0xf0f0f0;
+			tr.draw(matrixStack, name, x + 28, y, nameColor);
+			
+			tr.draw(matrixStack, bookOffer.id(), x + 28, y + 9, 0xa0a0a0);
+			
+			String price;
+			if(bookOffer.price() >= 64)
+				price = "any price";
+			else
+			{
+				price = "max " + bookOffer.price();
+				RenderUtils.drawItem(matrixStack, new ItemStack(Items.EMERALD),
+					x + 28 + tr.getWidth(price), y + 16, false);
+			}
+			
+			tr.draw(matrixStack, price, x + 28, y + 18, 0xa0a0a0);
 		}
 	}
 }

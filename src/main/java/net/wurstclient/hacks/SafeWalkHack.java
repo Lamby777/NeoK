@@ -66,13 +66,16 @@ public final class SafeWalkHack extends Hack {
 
 		setSneaking(clipping);
 	}
-
-	private void setSneaking(boolean sneaking) {
-		IKeyBinding sneakKey = (IKeyBinding) MC.options.sneakKey;
-
-		if (sneaking) ((KeyBinding) sneakKey).setPressed(true);
-		else((KeyBinding) sneakKey).setPressed(sneakKey.isActuallyPressed());
-
+	
+	private void setSneaking(boolean sneaking)
+	{
+		KeyBinding sneakKey = MC.options.sneakKey;
+		
+		if(sneaking)
+			sneakKey.setPressed(true);
+		else
+			((IKeyBinding)sneakKey).resetPressedState();
+		
 		this.sneaking = sneaking;
 	}
 }
