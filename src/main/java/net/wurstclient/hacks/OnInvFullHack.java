@@ -30,12 +30,6 @@ public final class OnInvFullHack extends Hack implements UpdateListener {
 	@Override
 	public void onEnable() {
 		lastCheckFull = false;
-		EVENTS.add(UpdateListener.class, this);
-	}
-	
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
 	}
 	
 	@Override
@@ -57,7 +51,7 @@ public final class OnInvFullHack extends Hack implements UpdateListener {
 			WURST.getCmdProcessor().process(message.substring(1));
 		} else {
 			// Otherwise, send to chat
-			MC.player.sendChatMessage(message);
+			MC.getNetworkHandler().sendChatMessage(message);
 		}
 	}
 }

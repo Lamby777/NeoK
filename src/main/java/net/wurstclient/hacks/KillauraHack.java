@@ -83,7 +83,6 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 	
 	private Entity target;
 	private Entity renderTarget;
-	private int timer;
 	
 	public KillauraHack() {
 		super("Killaura");

@@ -68,7 +68,7 @@ public final class SpambotHack extends Hack implements UpdateListener {
 			WURST.getCmdProcessor().process(message.substring(1));
 		} else {
 			// Otherwise, send to chat
-			MC.player.sendChatMessage(message);
+			MC.getNetworkHandler().sendChatMessage(message);
 		}
 	}
 
